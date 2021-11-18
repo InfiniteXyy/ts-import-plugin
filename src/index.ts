@@ -82,6 +82,7 @@ function getImportedStructs(node: ts.Node) {
 }
 
 function createDistAst(struct: ImportedStruct, options: Options) {
+  const { factory } = ts
   const astNodes: ts.Node[] = []
 
   const { libraryName, libraryOverride } = options
@@ -117,36 +118,43 @@ function createDistAst(struct: ImportedStruct, options: Options) {
     }
 
     astNodes.push(
-      ts.createImportDeclaration(
+      factory.createImportDeclaration(
         undefined,
         undefined,
-        ts.createImportClause(
+        factory.createImportClause(
+          false,
           undefined,
-          ts.createNamedImports([ts.createImportSpecifier(undefined, ts.createIdentifier(_importName))]),
+          factory.createNamedImports([
+            factory.createImportSpecifier(false, undefined, factory.createIdentifier(_importName)),
+          ]),
         ),
-        ts.createLiteral(libraryName!),
+        factory.createStringLiteral(libraryName!),
       ),
     )
   }
 
   if (canResolveImportPath) {
-    const scriptNode = ts.createImportDeclaration(
+    const scriptNode = factory.createImportDeclaration(
       undefined,
       undefined,
-      ts.createImportClause(
+      factory.createImportClause(
+        false,
         struct.variableName || !options.transformToDefaultImport ? undefined : ts.createIdentifier(struct.importName),
         struct.variableName
-          ? ts.createNamedImports([
-              ts.createImportSpecifier(
+          ? factory.createNamedImports([
+              factory.createImportSpecifier(
+                false,
                 options.transformToDefaultImport
-                  ? ts.createIdentifier('default')
-                  : ts.createIdentifier(struct.importName),
-                ts.createIdentifier(struct.variableName),
+                  ? factory.createIdentifier('default')
+                  : factory.createIdentifier(struct.importName),
+                factory.createIdentifier(struct.variableName),
               ),
             ])
           : options.transformToDefaultImport
           ? undefined
-          : ts.createNamedImports([ts.createImportSpecifier(undefined, ts.createIdentifier(struct.importName))]),
+          : factory.createNamedImports([
+              factory.createImportSpecifier(false, undefined, factory.createIdentifier(struct.importName)),
+            ]),
       ),
       ts.createLiteral(importPath),
     )
